@@ -1,0 +1,99 @@
+// =============================================================================
+// Prisma Schema — TOEFL Helper
+// =============================================================================
+// Dual-provider support: SQLite (dev) or PostgreSQL (prod).
+// The schema uses sqlite as the default provider.
+// For PostgreSQL, prisma.config.ts overrides the datasource at runtime
+// when DATABASE_PROVIDER=postgresql is set in the environment.
+// @db.Text annotations are intentionally omitted — not supported by SQLite.
+// =============================================================================
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ---------------------------------------------------------------------------
+// Enums
+// ---------------------------------------------------------------------------
+
+enum WritingMode {
+  EMAIL
+  DISCUSSION
+}
+
+enum DifficultyLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+// ---------------------------------------------------------------------------
+// User
+// ---------------------------------------------------------------------------
+
+model User {
+  id           String          @id @default(cuid())
+  email        String          @unique
+  passwordHash String
+  displayName  String
+  currentLevel DifficultyLevel @default(BEGINNER)
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+
+  submissions Submission[]
+
+  @@map("users")
+}
+
+// ---------------------------------------------------------------------------
+// Prompt
+// ---------------------------------------------------------------------------
+
+model Prompt {
+  id              String          @id @default(cuid())
+  mode            WritingMode
+  difficulty      DifficultyLevel
+  title           String
+  scenarioText    String
+  professorPrompt String?
+  studentOpinionA String?
+  studentOpinionB String?
+  createdAt       DateTime        @default(now())
+
+  submissions Submission[]
+
+  @@index([mode, difficulty])
+  @@map("prompts")
+}
+
+// ---------------------------------------------------------------------------
+// Submission
+// ---------------------------------------------------------------------------
+
+model Submission {
+  id              String   @id @default(cuid())
+  essayText       String
+  wordCount       Int
+  timeSpentSec    Int
+  overallScore    Float?
+  rubricScores    Json?
+  feedbackJson    Json?
+  polishedVersion String?
+  llmProvider     String?
+  createdAt       DateTime @default(now())
+
+  userId   String?
+  user     User?   @relation(fields: [userId], references: [id], onDelete: SetNull)
+  promptId String
+  prompt   Prompt  @relation(fields: [promptId], references: [id])
+
+  @@index([userId])
+  @@index([promptId])
+  @@map("submissions")
+}
