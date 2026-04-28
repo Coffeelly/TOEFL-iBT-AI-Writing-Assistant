@@ -8,6 +8,7 @@ import { useExamContext } from '@/contexts/ExamContext'
 
 const authedNav = [
   { name: 'Practice', href: '/' },
+  { name: 'Grammar Fix', href: '/grammar' },
   { name: 'Dashboard', href: '/dashboard' },
   { name: 'History', href: '/history' },
   { name: 'Settings', href: '/settings' },
@@ -15,6 +16,7 @@ const authedNav = [
 
 const guestNav = [
   { name: 'Practice', href: '/' },
+  { name: 'Grammar Fix', href: '/grammar' },
 ]
 
 export function Header() {
